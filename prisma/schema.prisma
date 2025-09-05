@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Essential for migrations!
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     // "player" | "publisher" | "admin"
+  publisher Publisher? @relation(fields: [publisherId], references: [id])
+  publisherId String?
+  ratings   Rating[]
+}
+
+model Publisher {
+  id          String   @id @default(uuid())
+  name        String
+  logo        String?
+  description String?
+  website     String?
+  games       Game[]
+  user        User[]
+}
+
+model Game {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  thumbnail    String?
+  tags         String[]
+  publisher    Publisher @relation(fields: [publisherId], references: [id])
+  publisherId  String
+  ageRating    String
+  ratings      Rating[]
+  createdAt    DateTime @default(now())
+}
+
+model Rating {
+  id      String   @id @default(uuid())
+  value   Int      // 1-5
+  user    User     @relation(fields: [userId], references: [id])
+  userId  String
+  game    Game     @relation(fields: [gameId], references: [id])
+  gameId  String
+}
+
+enum Role {
+  player
+  publisher
+  admin
+}
+
